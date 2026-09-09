@@ -5,9 +5,9 @@ import psycopg
 # Environment variables with defaults
 DB_HOST = os.getenv("DB_HOST", "db")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))
-DB_USER = ...   # TODO: read DB_USER from the environment, defaulting to "appuser"
-DB_PASS = ...   # TODO: read DB_PASS from the environment, defaulting to "secretpw"
-DB_NAME = ...   # TODO: read DB_NAME from the environment, defaulting to "appdb"
+DB_USER = os.getenv("DB_USER", "appuser")   # TODO: read DB_USER from the environment, defaulting to "appuser"
+DB_PASS = os.getenv("DB_PASS", "secretpw")   # TODO: read DB_PASS from the environment, defaulting to "secretpw"
+DB_NAME = os.getenv("DB_NAME", "appdb")   # TODO: read DB_NAME from the environment, defaulting to "appdb"
 TOP_N = int(os.getenv("APP_TOP_N", "5"))
 
 
@@ -37,14 +37,17 @@ def main():
     with conn, conn.cursor() as cur:
         # Total number of trips
         # TODO: write a query that counts the rows in trips
-        cur.execute("...")
+        cur.execute("SELECT COUNT(*) FROM trips")
         total_trips = cur.fetchone()[0]
 
         # Average fare by city
         # TODO: return one row per city with the average fare, rounded to 2 decimals,
         #       ordered by city. Name the second column avg_fare.
         cur.execute("""
-            ...
+            SELECT city, ROUND(AVG(fare), 2) AS avg_fare
+            FROM trips
+            GROUP BY city
+            ORDER BY city
         """)
         by_city = [{"city": c, "avg_fare": float(a)} for (c, a) in cur.fetchall()]
 
@@ -53,10 +56,13 @@ def main():
         #       Break ties by city ascending. Use %s for the limit so it stays a
         #       parameter rather than string formatting.
         cur.execute("""
-            ...
+            SELECT city, minutes, fare
+            FROM trips
+            ORDER BY minutes DESC, city ASC
+            LIMIT %s
         """, (TOP_N,))
         # TODO: build a list of dicts with keys city, minutes and fare
-        top = ...
+        top = [{"city": city, "minutes": minutes, "fare": float(fare)} for city, minutes, fare in cur.fetchall()]
 
         summary = {
             "total_trips": int(total_trips),
