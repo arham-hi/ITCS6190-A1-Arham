@@ -1,7 +1,5 @@
 # Assignment #1: Containers with Docker
 
-> **Replace this README with your own before submitting.** Section 6 of the handout lists
-> what it must contain; the headings below are there to get you started.
 >
 > **Name:** Arham Hussain Inamdar
 
@@ -12,15 +10,16 @@
 A two-container stack: a PostgreSQL database seeded from `db/init.sql`, and a Python app
 that queries it, computes a few statistics, prints them, and writes `out/summary.json`.
 
-## What is provided, and what you write
+## Implementation
 
-Everything here runs except the parts marked `TODO`. You need to:
+The Python app reads its database connection settings from environment
+variables supplied by Docker Compose. It queries the total number of trips,
+the average fare per city rounded to two decimal places, and the longest
+trips ordered by duration, with ties broken alphabetically by city.
 
-- `app/main.py` — read `DB_USER`, `DB_PASS` and `DB_NAME` from the environment; write the
-  three SQL queries; build the `top` list of dictionaries.
-- `compose.yml` — set the `DB_*` environment variables for the `app` service.
-
-The Dockerfiles, `db/init.sql`, the `Makefile` and this layout are given to you.
+The app prints the results as JSON and saves them to out/summary.json.
+Docker Compose waits for the database healthcheck before starting the app,
+and the app retries failed database connections.
 
 ## Repository layout
 
@@ -35,33 +34,56 @@ The Dockerfiles, `db/init.sql`, the `Makefile` and this layout are given to you.
 └─ README.md
 ```
 
-## How to run
+## How to run and stop
 
-```bash
-make            # clean, build, and start both services
-make down       # stop and remove the containers and volumes
-```
+Start Docker Desktop and wait for its engine to be running. From the
+project folder, build and start the stack:
 
-Or without make:
-
-```bash
+```powershell
 docker compose up --build
 ```
 
-The app connects to the database, runs its queries, prints a JSON summary to the terminal
-and writes the same summary to `out/summary.json`.
+The app prints its summary and exits. The database continues running.
+In another terminal, or after pressing Ctrl+C, stop and remove the containers:
+
+```powershell
+docker compose down
+```
+
+To view the saved output in PowerShell:
+
+```powershell
+Get-Content .\out\summary.json
+```
+
+The included Makefile also provides `make` and `make down` for environments
+with Make and a Unix-compatible shell.
 
 ## Example output
 
-Paste your actual output here once it runs.
-
 ```json
 {
-  "total_trips": 6,
+  "total_trips": 12,
   "avg_fare_by_city": [
+    {
+      "city": "Atlanta",
+      "avg_fare": 21.75
+    },
     {
       "city": "Charlotte",
       "avg_fare": 16.25
+    },
+    {
+      "city": "Dubai",
+      "avg_fare": 33.75
+    },
+    {
+      "city": "Lisbon",
+      "avg_fare": 14.0
+    },
+    {
+      "city": "London",
+      "avg_fare": 38.0
     },
     {
       "city": "New York",
@@ -74,6 +96,21 @@ Paste your actual output here once it runs.
   ],
   "top_by_minutes": [
     {
+      "city": "Dubai",
+      "minutes": 35,
+      "fare": 42.0
+    },
+    {
+      "city": "London",
+      "minutes": 35,
+      "fare": 38.0
+    },
+    {
+      "city": "Atlanta",
+      "minutes": 28,
+      "fare": 26.0
+    },
+    {
       "city": "San Francisco",
       "minutes": 28,
       "fare": 29.3
@@ -84,24 +121,29 @@ Paste your actual output here once it runs.
       "fare": 27.1
     },
     {
+      "city": "Dubai",
+      "minutes": 22,
+      "fare": 25.5
+    },
+    {
       "city": "Charlotte",
       "minutes": 21,
       "fare": 20.0
     },
     {
+      "city": "Atlanta",
+      "minutes": 18,
+      "fare": 17.5
+    },
+    {
+      "city": "Lisbon",
+      "minutes": 16,
+      "fare": 14.0
+    },
+    {
       "city": "Charlotte",
       "minutes": 12,
       "fare": 12.5
-    },
-    {
-      "city": "San Francisco",
-      "minutes": 11,
-      "fare": 11.2
-    },
-    {
-      "city": "New York",
-      "minutes": 9,
-      "fare": 10.9
     }
   ]
 }
@@ -120,6 +162,8 @@ Paste your actual output here once it runs.
   root. `sudo chown -R $USER out` fixes it; `make clean` recreates the directory.
 - **Stale database.** The seed script in `db/init.sql` runs only on first initialisation.
   Run `make down` (which passes `-v` and drops the volume) before starting again.
+- **Docker engine connection error:** Open Docker Desktop and wait for the
+  engine to start, then rerun `docker compose up --build`.
 
 ## Notes on credentials
 

@@ -11,4 +11,10 @@ INSERT INTO trips (city, minutes, fare) VALUES
   ('New York', 9, 10.90),
   ('New York', 26, 27.10),
   ('San Francisco', 11, 11.20),
-  ('San Francisco', 28, 29.30);
+  ('San Francisco', 28, 29.30),
+  ('Atlanta', 18, 17.50),
+  ('Atlanta', 28, 26.00),
+  ('Dubai', 35, 42.00),
+  ('Dubai', 22, 25.50),
+  ('London', 35, 38.00),
+  ('Lisbon', 16, 14.00);
